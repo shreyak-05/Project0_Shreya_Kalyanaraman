@@ -22,16 +22,11 @@ class VelocityPublisher(Node):
         self.a_acc = float(input("Enter the acceleration (m/s^2): "))
         self.a_dec = self.a_acc
         
-        # Phase durations
+        # distance for acceleration phase
         self.t1 = self.v_max / self.a_acc  
         self.x1 = 0.5 * self.a_acc * self.t1 ** 2  
         
-        # Check if the goal distance is enough to reach max velocity
-        # if self.x1 + (self.v_max ** 2) / (2 * self.a_dec) > self.y_goal:
-        #     raise ValueError("Goal is too short to reach max velocity with the given deceleration rate.")
-        
         # Distance left for constant velocity
-        
         self.x3 = (self.v_max ** 2) / (2 * self.a_dec)  
         self.x2 = self.y_goal - (self.x1 + self.x3) 
         self.t2 = self.x2 / self.v_max  
