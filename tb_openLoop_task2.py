@@ -26,11 +26,17 @@ class VelocityPublisher(Node):
         self.t1 = self.v_max / self.a_acc  
         self.x1 = 0.5 * self.a_acc * self.t1 ** 2  
         
+        # Check if the goal distance is enough to reach max velocity
+        # if self.x1 + (self.v_max ** 2) / (2 * self.a_dec) > self.y_goal:
+        #     raise ValueError("Goal is too short to reach max velocity with the given deceleration rate.")
+        
         # Distance left for constant velocity
+        
         self.x3 = (self.v_max ** 2) / (2 * self.a_dec)  
         self.x2 = self.y_goal - (self.x1 + self.x3) 
         self.t2 = self.x2 / self.v_max  
-      
+        
+        
         # Deceleration phase time
         self.t3 = self.v_max / self.a_dec  
 
@@ -45,7 +51,7 @@ class VelocityPublisher(Node):
         self.position_history = []
         self.time_history = []
 
-        # Start plot thread
+        # Start plot thread for real-time plotting
         plot_thread = threading.Thread(target=self.plot_data)
         plot_thread.start()
 
@@ -74,10 +80,10 @@ class VelocityPublisher(Node):
             self.get_logger().info(f'Phase 3: Decelerating. Velocity: {move.linear.x:.2f} m/s.  Position: {self.current_x:.2f} m')
 
         # Stop the robot when the goal is reached
-        if elapsed_time >= (self.t1 + self.t2 + self.t3) or self.current_y >= self.y_goal:
+        if elapsed_time >= (self.t1 + self.t2 + self.t3) or self.current_x >= self.y_goal:
             move.linear.x = 0.0
             self.publisher_.publish(move)
-            self.get_logger().info(f'Goal reached at y = {self.current_y:.2f} m. Stopping the robot.')
+            self.get_logger().info(f'Goal reached at y = {self.current_x:.2f} m. Stopping the robot.')
             self.destroy_timer(self.timer)
 
             
@@ -94,12 +100,15 @@ class VelocityPublisher(Node):
             move = Twist()
             move.linear.x = 0.0
             self.publisher_.publish(move)
-            self.get_logger().info(f'Overshot target, stopping. Current y = {self.current_x:.2f} m')
+            self.get_logger().info(f'Overshot target, stopping the turtlebot. Current y = {self.current_x:.2f} m')
             self.destroy_timer(self.timer)
+        
+        
         
     def plot_data(self):
         plt.ion()  
         fig, ax = plt.subplots()
+
         while rclpy.ok():
             if self.position_history:
                 ax.clear()
@@ -120,9 +129,9 @@ def main(args=None):
     try:
         rclpy.spin(velocity_publisher)
     except KeyboardInterrupt:
-        print("Stopping")
+        print("KeyboardInterrupt: Stopping...")
     finally:
-        print("shutting down")
+        print("Destroying node and shutting down...")
         velocity_publisher.destroy_node()
         rclpy.shutdown()
         print("Shutdown complete.")
